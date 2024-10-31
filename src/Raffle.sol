@@ -11,6 +11,9 @@ contract Raffle {
     error Raffle__SendMoreEthToEnterRaffle();
 
     uint256 private immutable i_enteranceFee;
+    address payable[] private s_players;
+
+    event EnterRaffle(address indexed player);
 
     constructor(uint256 enteranceFee) {
         i_enteranceFee = enteranceFee;
@@ -20,6 +23,8 @@ contract Raffle {
         if (msg.value < i_enteranceFee) {
             revert Raffle__SendMoreEthToEnterRaffle();
         }
+        s_players.push(payable(msg.sender));
+        emit EnterRaffle({player: msg.sender});
     }
 
     function pickWinner() public {}
