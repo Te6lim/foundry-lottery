@@ -13,6 +13,12 @@ import {VRFV2PlusClient} from "lib/chainlink-brownie-contracts/contracts/src/v0.
 contract Raffle is VRFConsumerBaseV2Plus {
     error Raffle__SendMoreEthToEnterRaffle();
     error Raffle__TransferFailed();
+    error Raffel__RaffleNotOpen();
+
+    enum RaffleState {
+        OPEN,
+        CALCULATING
+    }
 
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private constant NUM_WORDS = 1;
@@ -25,6 +31,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint256 private immutable i_subscriptionId;
     uint32 private immutable i_callbackGasLimit;
     address private s_recentWinner;
+    RaffleState private s_raffleState;
 
     event EnterRaffle(address indexed player);
 
@@ -42,12 +49,17 @@ contract Raffle is VRFConsumerBaseV2Plus {
         i_keyHash = gasLane;
         i_subscriptionId - subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
+        s_raffleState = RaffleState.OPEN;
     }
 
     function enterRaffle() external payable {
         if (msg.value < i_enteranceFee) {
             revert Raffle__SendMoreEthToEnterRaffle();
         }
+        if (s_raffleState != RaffleState.OPEN) {
+            revert Raffel__RaffleNotOpen();
+        }
+
         s_players.push(payable(msg.sender));
         emit EnterRaffle({player: msg.sender});
     }
@@ -56,6 +68,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         if (block.timestamp - s_lastTimestamp < i_interval) {
             revert();
         }
+        s_raffleState = RaffleState.CALCULATING;
 
         VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
             .RandomWordsRequest({
@@ -84,6 +97,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable recentWinner = s_players[indexOfWinner];
         s_recentWinner = recentWinner;
+        s_raffleState = RaffleState.OPEN;
         (bool success, ) = recentWinner.call{value: address(this).balance}("");
         if (!success) {
             revert Raffle__TransferFailed();
