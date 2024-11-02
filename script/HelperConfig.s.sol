@@ -77,4 +77,8 @@ contract HelperConfig is Script {
             revert HelperConfig__InvalidChainId();
         }
     }
+
+    function getNetworkConfig() public returns (NetworkConfig memory) {
+        return getNetworkConfigByChainId(block.chainid);
+    }
 }
