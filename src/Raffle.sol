@@ -15,6 +15,11 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     error Raffle__SendMoreEthToEnterRaffle();
     error Raffle__TransferFailed();
     error Raffel__RaffleNotOpen();
+    error Raffle__RaffleUpkeepNotNeeded(
+        uint256 balance,
+        uint256 playersLength,
+        uint256 raffleState
+    );
 
     enum RaffleState {
         OPEN,
@@ -92,12 +97,17 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         bool hasPlayers = s_players.length > 0;
 
         upkeepNeeded = timeHasPassed && isOpen && hasBalance && hasPlayers;
+        return (upkeepNeeded, "");
     }
 
     function performUpkeep(bytes calldata /* performData */) public override {
         (bool upkeepNeeded, ) = this.checkUpkeep("");
         if (!upkeepNeeded) {
-            revert();
+            revert Raffle__RaffleUpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState)
+            );
         }
         this.pickWinner();
     }
@@ -121,7 +131,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
                 )
             });
 
-        uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
+        s_vrfCoordinator.requestRandomWords(request);
     }
 
     function getEnteranceFee() external view returns (uint256) {
@@ -129,7 +139,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     }
 
     function fulfillRandomWords(
-        uint256 requestId,
+        uint256 /*requestId*/,
         uint256[] calldata randomWords
     ) internal virtual override {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
