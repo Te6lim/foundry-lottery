@@ -17,9 +17,27 @@ contract Raffletest is Test {
         DeployRaffle deployer = new DeployRaffle();
 
         (raffle, helperConfig) = deployer.deploy();
+        vm.deal(player, STARTING_BALANCE);
     }
 
     function testRaffleInitializesInOpenState() public view {
         assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
+    }
+
+    function testRaffleRevertOnInsufficientFunds() public {
+        vm.prank(player);
+        vm.expectRevert(Raffle.Raffle__SendMoreEthToEnterRaffle.selector);
+
+        raffle.enterRaffle();
+    }
+
+    function testRaffleRecordsPlayersWhenEntered() public {
+        vm.startPrank(player);
+        raffle.enterRaffle{
+            value: helperConfig.getNetworkConfig().enteranceFee
+        }();
+        vm.stopPrank();
+        address playerRecorded = raffle.getPlayer(0);
+        assert(player == playerRecorded);
     }
 }
