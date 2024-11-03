@@ -15,7 +15,7 @@ contract DeployRaffle is Script {
 
         vm.startBroadcast();
         Raffle raffle = new Raffle(
-            networkConfig.enteranceFee,
+            networkConfig.entranceFee,
             networkConfig.interval,
             networkConfig.vrfCoordinator,
             networkConfig.gasLane,

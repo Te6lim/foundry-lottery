@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {VRFConsumerBaseV2Plus} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 import {VRFV2PlusClient} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 import {AutomationCompatibleInterface} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/automation/AutomationCompatible.sol";
+import {console} from "forge-std/console.sol";
 
 /**
  * @title A sample raffle contract
@@ -60,6 +61,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     }
 
     function enterRaffle() external payable {
+        console.log("THIS IS THE EMITTED MESSAGE SENDER %s", msg.sender);
         if (msg.value < i_enteranceFee) {
             revert Raffle__SendMoreEthToEnterRaffle();
         }
@@ -68,7 +70,8 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         }
 
         s_players.push(payable(msg.sender));
-        emit EnterRaffle({player: msg.sender});
+        console.log("THIS IS THE EMITTED MESSAGE SENDER %s", msg.sender);
+        //emit EnterRaffle({player: msg.sender});
     }
 
     /**
