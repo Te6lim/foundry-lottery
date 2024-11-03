@@ -134,6 +134,10 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         s_vrfCoordinator.requestRandomWords(request);
     }
 
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
+    }
+
     function getEnteranceFee() external view returns (uint256) {
         return i_enteranceFee;
     }
