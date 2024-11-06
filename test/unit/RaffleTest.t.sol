@@ -53,4 +53,19 @@ contract Raffletest is Test {
         }();
         vm.stopPrank();
     }
+
+    function testDontAllowPlayersToEnterWhileRaffleIsCalculating() public {
+        vm.startPrank(player);
+        raffle.enterRaffle{
+            value: helperConfig.getNetworkConfig().entranceFee
+        }();
+        vm.stopPrank();
+        vm.warp(block.timestamp + helperConfig.getNetworkConfig().interval + 1);
+        raffle.performUpkeep("");
+
+        vm.expectRevert(Raffle.Raffel__RaffleNotOpen.selector);
+        raffle.enterRaffle{
+            value: helperConfig.getNetworkConfig().entranceFee
+        }();
+    }
 }
