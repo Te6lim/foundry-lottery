@@ -63,7 +63,7 @@ contract HelperConfig is Script {
             interval: 30,
             vrfCoordinator: address(vrfCoordinatorMock),
             gasLane: 0x0,
-            callbackGasLimit: 500000,
+            callbackGasLimit: 5000000,
             subscriptionId: 0,
             chainId: LOCAL_CHAIN_ID,
             linkToken: address(linkToken)

@@ -35,7 +35,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     uint256 private immutable i_interval;
     uint256 private s_lastTimestamp;
     bytes32 private immutable i_keyHash;
-    uint256 private immutable i_subscriptionId;
+    uint256 private i_subscriptionId;
     uint32 private immutable i_callbackGasLimit;
     address private s_recentWinner;
     RaffleState private s_raffleState;
@@ -60,8 +60,11 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         s_raffleState = RaffleState.OPEN;
     }
 
+    function setSubId(uint256 subId) public {
+        i_subscriptionId = subId;
+    }
+
     function enterRaffle() external payable {
-        console.log("THIS IS THE EMITTED MESSAGE SENDER %s", msg.sender);
         if (msg.value < i_enteranceFee) {
             revert Raffle__SendMoreEthToEnterRaffle();
         }
@@ -70,8 +73,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         }
 
         s_players.push(payable(msg.sender));
-        console.log("THIS IS THE EMITTED MESSAGE SENDER %s", msg.sender);
-        //emit EnterRaffle({player: msg.sender});
+        emit EnterRaffle({player: msg.sender});
     }
 
     /**
@@ -112,6 +114,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
                 uint256(s_raffleState)
             );
         }
+        s_raffleState = RaffleState.CALCULATING;
         this.pickWinner();
     }
 
@@ -119,7 +122,6 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         if (block.timestamp - s_lastTimestamp < i_interval) {
             revert();
         }
-        s_raffleState = RaffleState.CALCULATING;
 
         VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
             .RandomWordsRequest({

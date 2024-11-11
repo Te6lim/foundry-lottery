@@ -46,26 +46,28 @@ contract Raffletest is Test {
 
     function testEnteringRaffleEmitEvent() public {
         vm.startPrank(player);
+        uint256 enteranceFee = helperConfig.getNetworkConfig().entranceFee;
         vm.expectEmit(true, false, false, false, address(raffle));
         emit EnterRaffle(player);
-        raffle.enterRaffle{
-            value: helperConfig.getNetworkConfig().entranceFee
-        }();
+        raffle.enterRaffle{value: enteranceFee}();
         vm.stopPrank();
     }
 
     function testDontAllowPlayersToEnterWhileRaffleIsCalculating() public {
+        console.log("RAFFLE STATE: ", uint32(raffle.getRaffleState()));
         vm.startPrank(player);
         raffle.enterRaffle{
             value: helperConfig.getNetworkConfig().entranceFee
         }();
         vm.stopPrank();
         vm.warp(block.timestamp + helperConfig.getNetworkConfig().interval + 1);
+        vm.roll(block.number + 1);
         raffle.performUpkeep("");
 
+        console.log("RAFFLE STATE: ", uint32(raffle.getRaffleState()));
+        uint256 enteranceFee = helperConfig.getNetworkConfig().entranceFee;
+        vm.prank(player);
         vm.expectRevert(Raffle.Raffel__RaffleNotOpen.selector);
-        raffle.enterRaffle{
-            value: helperConfig.getNetworkConfig().entranceFee
-        }();
+        raffle.enterRaffle{value: enteranceFee}();
     }
 }
