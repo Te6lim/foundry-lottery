@@ -27,7 +27,7 @@ contract DeployRaffle is Script, CodeConstants {
         );
         vm.stopBroadcast();
 
-        if (block.chainid == LOCAL_CHAIN_ID) {
+        if (networkConfig.subscriptionId == 0) {
             CreateSubscription createSub = new CreateSubscription();
             (
                 networkConfig.subscriptionId,

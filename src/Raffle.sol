@@ -74,6 +74,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         }
 
         s_players.push(payable(msg.sender));
+        console.log("ADDRESS PUSHED ", msg.sender);
         emit EnterRaffle({player: msg.sender});
     }
 
@@ -152,6 +153,21 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
 
     function getPlayer(uint256 index) external view returns (address) {
         return s_players[index];
+    }
+
+    function getLastTimeStamp() external view returns (uint256) {
+        return s_lastTimestamp;
+    }
+
+    function getRecentWinner() external view returns (address) {
+        return s_recentWinner;
+    }
+
+    function sendToFulfilRandomWords(
+        uint256 requestId,
+        uint256[] calldata numbers
+    ) external {
+        fulfillRandomWords(requestId, numbers);
     }
 
     function fulfillRandomWords(
