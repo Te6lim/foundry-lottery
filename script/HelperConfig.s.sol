@@ -22,8 +22,8 @@ contract HelperConfig is Script {
         bytes32 gasLane;
         uint256 subscriptionId;
         uint32 callbackGasLimit;
-        uint256 chainId;
         address linkToken;
+        address account;
     }
 
     NetworkConfig private localNetworkConfig;
@@ -40,14 +40,14 @@ contract HelperConfig is Script {
                 vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
                 gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
                 callbackGasLimit: 500000,
-                subscriptionId: 66182462943105983275176470583955185996312311083390718242651385306517860399471,
-                chainId: ETH_SEPOLIA_CHAIN_ID,
-                linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+                subscriptionId: 0,
+                linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+                account: 0x88655614D866403E04C8A68c87bAfE58adC3048c
             });
     }
 
     function getAnvilEthConfig() public returns (NetworkConfig memory) {
-        if (localNetworkConfig.chainId != 0) return localNetworkConfig;
+        if (localNetworkConfig.entranceFee != 0) return localNetworkConfig;
 
         vm.startBroadcast();
         VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
@@ -65,8 +65,8 @@ contract HelperConfig is Script {
             gasLane: 0x0,
             callbackGasLimit: 5000000,
             subscriptionId: 0,
-            chainId: LOCAL_CHAIN_ID,
-            linkToken: address(linkToken)
+            linkToken: address(linkToken),
+            account: 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
         });
         return localNetworkConfig;
     }

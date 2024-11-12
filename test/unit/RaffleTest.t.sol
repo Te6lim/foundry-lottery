@@ -4,11 +4,11 @@ pragma solidity ^0.8.28;
 import {Test, console} from "forge-std/Test.sol";
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {Raffle} from "src/Raffle.sol";
-import {HelperConfig} from "script/HelperConfig.s.sol";
+import {HelperConfig, CodeConstants} from "script/HelperConfig.s.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {VRFCoordinatorV2_5Mock} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
-contract Raffletest is Test {
+contract Raffletest is Test, CodeConstants {
     Raffle public raffle;
     HelperConfig public helperConfig;
     HelperConfig.NetworkConfig public networkConfig;
@@ -130,10 +130,17 @@ contract Raffletest is Test {
         assert(uint256(raffleState) == 1);
     }
 
+    modifier skipFork() {
+        if (block.chainid != LOCAL_CHAIN_ID) {
+            return;
+        }
+        _;
+    }
+
     //fuzz testing
     function testFulfillRandomWordsCanOnlyBeCalledAfterPerformUpkeep(
         uint256 randomRequestId
-    ) public raffleEntered {
+    ) public raffleEntered skipFork {
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
         VRFCoordinatorV2_5Mock(networkConfig.vrfCoordinator).fulfillRandomWords(
                 randomRequestId,
@@ -165,13 +172,13 @@ contract Raffletest is Test {
         raffle.performUpkeep("");
         Vm.Log[] memory entries = vm.getRecordedLogs();
         bytes32 requestId = entries[1].topics[1];
-        /*uint256[] memory words = new uint256[](1);
+        uint256[] memory words = new uint256[](1);
         words[0] = 1;
-        raffle.sendToFulfilRandomWords(uint256(requestId), words);*/
-        VRFCoordinatorV2_5Mock(networkConfig.vrfCoordinator).fulfillRandomWords(
+        raffle.sendToFulfilRandomWords(uint256(requestId), words);
+        /*VRFCoordinatorV2_5Mock(networkConfig.vrfCoordinator).fulfillRandomWords(
                 uint256(requestId),
                 address(raffle)
-            );
+            );*/
 
         address recentWinner = raffle.getRecentWinner();
         Raffle.RaffleState raffleState = raffle.getRaffleState();
