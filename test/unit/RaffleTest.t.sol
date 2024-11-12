@@ -5,6 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {Raffle} from "src/Raffle.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 contract Raffletest is Test {
     Raffle public raffle;
@@ -52,12 +53,7 @@ contract Raffletest is Test {
         vm.stopPrank();
     }
 
-    function testDontAllowPlayersToEnterWhileRaffleIsCalculating() public {
-        vm.startPrank(player);
-        raffle.enterRaffle{value: networkConfig.entranceFee}();
-        vm.stopPrank();
-        vm.warp(block.timestamp + networkConfig.interval + 1);
-        vm.roll(block.number + 1);
+    function testDontAllowPlayersToEnterWhileRaffleIsCalculating() public raffleEntered {
         raffle.performUpkeep("");
 
         vm.prank(player);
@@ -71,13 +67,7 @@ contract Raffletest is Test {
         assert(!upkeepNeeded);
     }
 
-    function testCheckUpkeepReturnsFalseIfRaffleIsntOpen() public {
-        vm.startPrank(player);
-        raffle.enterRaffle{value: networkConfig.entranceFee}();
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + networkConfig.interval + 1);
-        vm.roll(block.number + 1);
+    function testCheckUpkeepReturnsFalseIfRaffleIsntOpen() public raffleEntered {
         raffle.performUpkeep("");
 
         (bool upkeedNeeded, ) = raffle.checkUpkeep("");
@@ -86,14 +76,7 @@ contract Raffletest is Test {
 
     // perform upkeep tests
 
-    function testPerformUpkeepCanOnlyRunIfCheckUpkeepIsTrue() public {
-        vm.startPrank(player);
-        raffle.enterRaffle{value: networkConfig.entranceFee}();
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + networkConfig.interval + 1);
-        vm.roll(block.number + 1);
-
+    function testPerformUpkeepCanOnlyRunIfCheckUpkeepIsTrue() public raffleEntered {
         raffle.performUpkeep("");
     }
 
@@ -111,5 +94,26 @@ contract Raffletest is Test {
             )
         );
         raffle.performUpkeep("");
+    }
+
+    modifier raffleEntered() {
+        vm.startPrank(player);
+        raffle.enterRaffle{value: networkConfig.entranceFee}();
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + networkConfig.interval + 1);
+        vm.roll(block.number + 1);
+        _;
+    }
+
+    function testPerformUpkeepUpdatesRaffleStateAndEmitRequestId() public raffleEntered {
+        vm.recordLogs();
+        raffle.performUpkeep("");
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        bytes32 requestId = entries[1].topics[1];
+
+        Raffle.RaffleState raffleState = raffle.getRaffleState();
+        assert(uint256(requestId) > 0);
+        assert(uint256(raffleState) == 1);
     }
 }
