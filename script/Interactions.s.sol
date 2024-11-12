@@ -9,8 +9,8 @@ import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 contract CreateSubscription is Script {
     function createSubscriptionUsingConfig() public returns (uint256, address) {
-        HelperConfig helperConfig = new HelperConfig();
-        address vrfCoordinator = helperConfig.getNetworkConfig().vrfCoordinator;
+        HelperConfig.NetworkConfig memory networkConfig = new HelperConfig().getNetworkConfig();
+        address vrfCoordinator = networkConfig.vrfCoordinator;
         (uint256 subId, ) = createSubscription(vrfCoordinator);
         return (subId, vrfCoordinator);
     }
@@ -43,10 +43,10 @@ contract FundSubscription is Script, CodeConstants {
     }
 
     function fundSubscriptionUsingConfig() public {
-        HelperConfig helperConfig = new HelperConfig();
-        address vrfCoordinator = helperConfig.getNetworkConfig().vrfCoordinator;
-        uint256 subscriptionId = helperConfig.getNetworkConfig().subscriptionId;
-        address linkToken = helperConfig.getNetworkConfig().linkToken;
+        HelperConfig.NetworkConfig memory networkConfig = new HelperConfig().getNetworkConfig();
+        address vrfCoordinator = networkConfig.vrfCoordinator;
+        uint256 subscriptionId = networkConfig.subscriptionId;
+        address linkToken = networkConfig.linkToken;
         fundSubscription(vrfCoordinator, subscriptionId, linkToken);
     }
 
@@ -88,9 +88,9 @@ contract AddConsumer is Script {
     }
 
     function addConsumerUsingConfig(address mostRecentlyDeployed) public {
-        HelperConfig helperConfig = new HelperConfig();
-        uint256 subId = helperConfig.getNetworkConfig().subscriptionId;
-        address vrfCoordinator = helperConfig.getNetworkConfig().vrfCoordinator;
+        HelperConfig.NetworkConfig memory networkConfig = new HelperConfig().getNetworkConfig();
+        uint256 subId = networkConfig.subscriptionId;
+        address vrfCoordinator = networkConfig.vrfCoordinator;
         addConsumer(mostRecentlyDeployed, vrfCoordinator, subId);
     }
 
